@@ -4,6 +4,7 @@
 #include "error.hpp"
 
 #include <iostream>
+#include <fstream>
 
 using namespace Pipeline;
 using namespace std;
@@ -11,11 +12,11 @@ using namespace std;
 int main(int argc, char * argv[])
 {
     string input_file_path;
-    string task_name;
+    vector<string> task_names;
 
     Arguments args;
     args.add_option("-in", input_file_path);
-    args.add_option("-task", task_name);
+    args.save_remaining(task_names);
 
     try {
         args.parse(argc, argv);
@@ -26,7 +27,21 @@ int main(int argc, char * argv[])
 
     if (input_file_path.empty())
     {
-        cerr << "Missing option: -in (input_file_path)" << endl;
+        string path("pipeline.json");
+        ifstream file(path);
+        if (file.is_open())
+            input_file_path = path;
+    }
+    if (input_file_path.empty())
+    {
+        string path(".pipeline.json");
+        ifstream file(path);
+        if (file.is_open())
+            input_file_path = path;
+    }
+    if (input_file_path.empty())
+    {
+        cerr << "No pipeline.json or .pipeline.json found, and no -in option given." << endl;
         return 1;
     }
 
@@ -38,10 +53,15 @@ int main(int argc, char * argv[])
 
         work_provider.parse(input_file_path);
 
-        if (task_name.empty())
+        if (task_names.empty())
+        {
             work_provider.request_all(&engine);
+        }
         else
-            work_provider.request(task_name, &engine);
+        {
+            for (auto & name : task_names)
+                work_provider.request(name, &engine);
+        }
 
         engine.execute();
     }

@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 #include <functional>
 
 namespace Pipeline {
@@ -10,6 +11,7 @@ namespace Pipeline {
 using std::string;
 using std::istringstream;
 using std::unordered_map;
+using std::vector;
 using std::function;
 
 class Arguments
@@ -104,6 +106,11 @@ public:
         option_parsers.emplace(name, parser);
     }
 
+    void save_remaining(vector<string> & destination)
+    {
+        remaining_args = &destination;
+    }
+
     void parse(int argc, char * argv[])
     {
         // Skip executable name
@@ -114,6 +121,9 @@ public:
         while(i < argc)
         {
             string option = argv[i];
+
+            if (option[0] != '-')
+                break;
 
             string name;
             string value;
@@ -138,10 +148,23 @@ public:
 
             ++i;
         }
+
+        if (remaining_args)
+        {
+            for(; i < argc; ++i)
+            {
+                remaining_args->push_back(argv[i]);
+            }
+        }
+        else if (i < argc)
+        {
+            throw Error(string("Invalid argument: ") + argv[i]);
+        }
     }
 
 private:
     unordered_map<string, Parser_Function> option_parsers;
+    vector<string> * remaining_args = nullptr;
 };
 
 }

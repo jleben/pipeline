@@ -1,6 +1,6 @@
 #include "arguments.hpp"
-#include "input/job_parser.hpp"
-#include "engine/job_worker.hpp"
+#include "input/simple_work_provider.hpp"
+#include "engine/engine.hpp"
 #include "error.hpp"
 
 #include <iostream>
@@ -30,23 +30,20 @@ int main(int argc, char * argv[])
         return 1;
     }
 
+    Simple_Work_Provider work_provider;
+    Engine engine;
+
     try
     {
-        Job job;
 
-        {
-            Job_Parser parser;
-            job = parser.parse(input_file_path);
-        }
+        work_provider.parse(input_file_path);
 
-        {
-            vector<string> task_names;
-            if (!task_name.empty())
-                task_names.push_back(task_name);
+        if (task_name.empty())
+            work_provider.request_all(&engine);
+        else
+            work_provider.request(task_name, &engine);
 
-            Job_Worker worker;
-            worker.execute(job, task_names);
-        }
+        engine.execute();
     }
     catch (Pipeline::Error & e)
     {

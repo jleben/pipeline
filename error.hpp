@@ -1,8 +1,11 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 
 namespace Pipeline {
+
+using std::string;
 
 class Error : public std::exception
 {

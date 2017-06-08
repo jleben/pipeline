@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 using namespace Pipeline;
 using namespace std;
@@ -65,8 +66,12 @@ int main(int argc, char * argv[])
 
         store.write(store_path);
 
+        bool has_generator = false;
+
         if (!store.task_generator_path.empty())
         {
+            has_generator = true;
+
             if (!file_exists(store.task_generator_path))
                 throw Error("Generator does not exist: " + store.task_generator_path);
 
@@ -77,7 +82,7 @@ int main(int argc, char * argv[])
             }
         }
 
-        if (new_generator || new_task_list)
+        if (new_generator || (new_task_list && has_generator))
         {
             cerr << "Executing generator: " << store.task_generator_path << endl;
 
@@ -96,7 +101,12 @@ int main(int argc, char * argv[])
 
         if (!file_exists(store.task_list_path))
         {
-            throw Error("Task list does not exist: " + store.task_list_path);
+            ostringstream msg;
+            msg << "Task list does not exist: " + store.task_list_path + ".";
+            if (!has_generator)
+                msg << " No task generator provided.";
+
+            throw Error(msg.str());
         }
 
         Simple_Work_Provider work_provider;

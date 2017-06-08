@@ -24,7 +24,7 @@ void Simple_Work_Provider::parse(const string & file_path)
     {
         ifstream file(file_path);
         if (!file.is_open())
-            throw Error("Could not open file.");
+            throw Error("Can not open task list: " + file_path);
 
         try {
             file >> job_data;

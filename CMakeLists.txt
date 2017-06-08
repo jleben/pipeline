@@ -8,7 +8,9 @@ set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local")
 add_executable(pipeline
     pipeline.cpp
     input/simple_work_provider.cpp
+    input/persistence.cpp
     engine/engine.cpp
+    util/filesystem.cpp
 )
 
 install(TARGETS pipeline DESTINATION bin)

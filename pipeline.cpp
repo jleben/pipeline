@@ -40,10 +40,19 @@ int main(int argc, char * argv[])
             store.read(store_path);
         }
 
+        bool new_task_list = false;
+
         if (!task_list_path.empty())
+        {
+            if (store.task_list_path != task_list_path)
+                new_task_list = true;
             store.task_list_path = task_list_path;
+        }
         else if (store.task_list_path.empty())
+        {
             store.task_list_path = "pipeline.json";
+            new_task_list = true;
+        }
 
         bool new_generator = false;
 
@@ -68,10 +77,15 @@ int main(int argc, char * argv[])
             }
         }
 
-        if (new_generator)
+        if (new_generator || new_task_list)
         {
+            cerr << "Executing generator: " << store.task_generator_path << endl;
+
             string command { "python3 " + store.task_generator_path };
             int result = system(command.c_str());
+
+            cerr << endl;
+
             if (result != 0)
                 throw Error("Generator execution failed.");
         }

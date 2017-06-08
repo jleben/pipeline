@@ -81,7 +81,11 @@ int main(int argc, char * argv[])
         {
             cerr << "Executing generator: " << store.task_generator_path << endl;
 
-            string command { "python3 " + store.task_generator_path };
+            string command { "python3 " };
+            command += store.task_generator_path;
+            command += " ";
+            command += store.task_list_path;
+
             int result = system(command.c_str());
 
             cerr << endl;

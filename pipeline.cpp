@@ -1,4 +1,5 @@
 #include "arguments.hpp"
+#include "pipeline.hpp"
 #include "input/simple_work_provider.hpp"
 #include "input/persistence.hpp"
 #include "engine/engine.hpp"
@@ -12,6 +13,12 @@
 using namespace Pipeline;
 using namespace std;
 
+Options & Pipeline::options()
+{
+    static Options options;
+    return options;
+}
+
 int main(int argc, char * argv[])
 {
     string task_list_path;
@@ -21,6 +28,7 @@ int main(int argc, char * argv[])
     Arguments args;
     args.add_option("-l", task_list_path);
     args.add_option("-g", task_generator_path);
+    args.add_switch("-v", options().verbose, true);
     args.save_remaining(task_names);
 
     try {
@@ -84,12 +92,14 @@ int main(int argc, char * argv[])
 
         if (new_generator || (new_task_list && has_generator))
         {
-            cerr << "Executing generator: " << store.task_generator_path << endl;
-
             string command { "python3 " };
             command += store.task_generator_path;
             command += " ";
             command += store.task_list_path;
+
+            cerr << "> Task list" << endl;
+            if (options().verbose)
+                cerr << command << endl;
 
             int result = system(command.c_str());
 

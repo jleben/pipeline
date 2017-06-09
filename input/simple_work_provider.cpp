@@ -1,4 +1,5 @@
 #include "simple_work_provider.hpp"
+#include "../pipeline.hpp"
 #include "../error.hpp"
 #include "../engine/engine.hpp"
 #include "../json/json.hpp"
@@ -119,7 +120,9 @@ Work * Simple_Work_Provider::add_work(const string & name)
 
 void Simple_Work_Provider::SimpleWork::execute()
 {
-    cerr << "Executing " << name <<  ": " << command << endl;
+    cerr << "> " << name << endl;
+    if (options().verbose)
+        cerr << command << endl;
 
     int result = system(command.c_str());
 

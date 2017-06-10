@@ -24,4 +24,13 @@ bool file_is_newer(const string & a, const string & b)
     return a_stat.st_mtime > b_stat.st_mtime;
 }
 
+
+time_t file_last_modified_time(const string & path)
+{
+    struct stat s;
+    if (stat(path.c_str(), &s) != 0)
+        throw Error("Failed to access file: " + path);
+    return s.st_mtime;
+}
+
 }

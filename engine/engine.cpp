@@ -54,7 +54,7 @@ private:
             auto & dep_state = state(dep);
             if (dep_state.visiting)
             {
-                throw Error("Mutual dependency between work items.");
+                throw Error("Dependency cycle among work items.");
             }
             if (!dep_state.visited)
                 visit(dep);
@@ -67,6 +67,9 @@ private:
 
 void Engine::schedule(Work * work)
 {
+    if (!work)
+        throw Error("Attempt at scheduling null work.");
+
     d_work.insert(work);
 }
 

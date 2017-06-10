@@ -1,6 +1,6 @@
 #include "arguments.hpp"
 #include "pipeline.hpp"
-#include "input/simple_work_provider.hpp"
+#include "input/tasks.hpp"
 #include "input/persistence.hpp"
 #include "engine/engine.hpp"
 #include "error.hpp"
@@ -90,7 +90,9 @@ int main(int argc, char * argv[])
             }
         }
 
-        if (new_generator || (new_task_list && has_generator))
+        bool regenerate = new_generator || (new_task_list && has_generator);
+
+        if (regenerate)
         {
             string command { "python3 " };
             command += store.task_generator_path;
@@ -119,19 +121,21 @@ int main(int argc, char * argv[])
             throw Error(msg.str());
         }
 
-        Simple_Work_Provider work_provider;
+        Task_Manager task_manager;
         Engine engine;
 
-        work_provider.parse(store.task_list_path);
+        bool new_tasks = new_generator || new_task_list;
+
+        task_manager.parse_file(store.task_list_path, new_tasks);
 
         if (task_names.empty())
         {
-            work_provider.request_all(&engine);
+            task_manager.request_all(&engine);
         }
         else
         {
             for (auto & name : task_names)
-                work_provider.request(name, &engine);
+                task_manager.request(name, &engine);
         }
 
         engine.execute();

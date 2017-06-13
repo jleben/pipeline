@@ -51,71 +51,73 @@ int main(int argc, char * argv[])
 
         bool new_task_list = false;
 
-        if (!task_list_path.empty())
+        if (task_list_path.empty())
+        {
+            task_list_path = store.task_list_path;
+        }
+        else
         {
             if (store.task_list_path != task_list_path)
+            {
                 new_task_list = true;
-            store.task_list_path = task_list_path;
-        }
-        else if (store.task_list_path.empty())
-        {
-            store.task_list_path = "pipeline.json";
-            new_task_list = true;
+                store.task_list_path = task_list_path;
+            }
         }
 
         bool new_generator = false;
 
-        if (!task_generator_path.empty())
+        if (task_generator_path.empty())
+        {
+            task_generator_path = store.task_generator_path;
+        }
+        else
         {
             if (task_generator_path != store.task_generator_path)
+            {
                 new_generator = true;
-            store.task_generator_path = task_generator_path;
+                store.task_generator_path = task_generator_path;
+            }
         }
 
         store.write(store_path);
 
-        bool has_generator = false;
-
-        if (!store.task_generator_path.empty())
+        if (!task_generator_path.empty())
         {
-            has_generator = true;
+            if (!file_exists(task_generator_path))
+                throw Error("Generator does not exist: " + task_generator_path);
 
-            if (!file_exists(store.task_generator_path))
-                throw Error("Generator does not exist: " + store.task_generator_path);
+            task_list_path = "pipeline.json";
 
-            if (!file_exists(store.task_list_path) ||
-                file_is_newer(store.task_generator_path, store.task_list_path))
+            bool regenerate =
+                    new_generator ||
+                    !file_exists(task_list_path) ||
+                    file_is_newer(task_generator_path, task_list_path);
+
+            if (regenerate)
             {
-                new_generator = true;
+                string command { "python3 -m pipeline " };
+                command += task_generator_path;
+                command += " ";
+                command += task_list_path;
+
+                cerr << "> Task list" << endl;
+                if (options().verbose)
+                    cerr << command << endl;
+
+                int result = system(command.c_str());
+
+                cerr << endl;
+
+                if (result != 0)
+                    throw Error("Generator execution failed.");
             }
         }
 
-        bool regenerate = new_generator || (new_task_list && has_generator);
-
-        if (regenerate)
-        {
-            string command { "python3 " };
-            command += store.task_generator_path;
-            command += " ";
-            command += store.task_list_path;
-
-            cerr << "> Task list" << endl;
-            if (options().verbose)
-                cerr << command << endl;
-
-            int result = system(command.c_str());
-
-            cerr << endl;
-
-            if (result != 0)
-                throw Error("Generator execution failed.");
-        }
-
-        if (!file_exists(store.task_list_path))
+        if (!file_exists(task_list_path))
         {
             ostringstream msg;
-            msg << "Task list does not exist: " + store.task_list_path + ".";
-            if (!has_generator)
+            msg << "Task list does not exist: " + task_list_path + ".";
+            if (!task_generator_path.empty())
                 msg << " No task generator provided.";
 
             throw Error(msg.str());

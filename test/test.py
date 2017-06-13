@@ -1,6 +1,5 @@
-import pipeline
 
-p = pipeline.Pipeline()
+p = pipeline
 
 p.add({
     "name": "a",
@@ -48,4 +47,4 @@ if False:
         "input_files": "missing.in"
     })
 
-p.save()
+pipeline.load("subdir/test2.py")

@@ -47,4 +47,10 @@ if False:
         "input_files": "missing.in"
     })
 
-pipeline.load("subdir/test2.py")
+class Helper:
+    def ha(name):
+        pipeline.add({"name": "ha-" + name, "command": "echo Ha!"});
+
+pipeline.helper = Helper
+
+pipeline.load("subdir/test.py")

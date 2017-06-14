@@ -9,3 +9,6 @@ if len(sys.argv) > 1:
     if len(sys.argv) > 2:
         savePath = sys.argv[2]
     p.save(savePath)
+
+else:
+    print("Required arguments: <generator script>")

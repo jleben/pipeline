@@ -1,3 +1,4 @@
+
 import json
 import runpy
 import os.path
@@ -13,6 +14,22 @@ class Pipeline:
     def add(self, task):
         self.tasks.append(task);
 
+    def relativePath(self, path):
+        if self.path:
+            return self.path + "/" + path
+        else:
+            return path
+
+    def load(self, path):
+
+        current_path = self.path
+
+        child_file_path = self.relativePath(path)
+
+        self.path = os.path.dirname(child_file_path)
+
+        runpy.run_path(child_file_path,  { "pipeline": self })
+
     def save(self, path=None):
 
         if path is None:
@@ -24,17 +41,3 @@ class Pipeline:
 
     def defaultSavePath(self):
         return 'pipeline.json'
-
-    def relativePath(self, path):
-        if self.path:
-            return self.path + "/" + path
-        else:
-            return path
-
-    def load(self, path):
-        p = Pipeline(self.relativePath(os.path.dirname(path)))
-
-        namespace = runpy.run_path(path,  { "pipeline": p })
-
-        if isinstance(p, Pipeline):
-            self.tasks += p.tasks

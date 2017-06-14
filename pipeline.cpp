@@ -38,6 +38,12 @@ int main(int argc, char * argv[])
         return 1;
     }
 
+    if (!task_list_path.empty() && !task_generator_path.empty())
+    {
+        cerr << "Options -l and -g can not be used simultaneously." << endl;
+        return 1;
+    }
+
     try
     {
         Store store;
@@ -49,37 +55,19 @@ int main(int argc, char * argv[])
             store.read(store_path);
         }
 
-        bool new_task_list = false;
-
-        if (task_list_path.empty())
+        if (!task_generator_path.empty())
         {
-            task_list_path = store.task_list_path;
+            store.task_generator_path = task_generator_path;
+            store.task_list_path.clear();
         }
-        else
+        else if (!task_list_path.empty())
         {
-            if (store.task_list_path != task_list_path)
-            {
-                new_task_list = true;
-                store.task_list_path = task_list_path;
-            }
+            store.task_list_path = task_list_path;
+            store.task_generator_path.clear();
         }
 
-        bool new_generator = false;
-
-        if (task_generator_path.empty())
-        {
-            task_generator_path = store.task_generator_path;
-        }
-        else
-        {
-            if (task_generator_path != store.task_generator_path)
-            {
-                new_generator = true;
-                store.task_generator_path = task_generator_path;
-            }
-        }
-
-        store.write(store_path);
+        task_generator_path = store.task_generator_path;
+        task_list_path = store.task_list_path;
 
         if (!task_generator_path.empty())
         {
@@ -88,47 +76,46 @@ int main(int argc, char * argv[])
 
             task_list_path = "pipeline.json";
 
-            bool regenerate =
-                    new_generator ||
-                    !file_exists(task_list_path) ||
-                    file_is_newer(task_generator_path, task_list_path);
+            string command { "python3 -m pipeline " };
+            command += task_generator_path;
+            command += " ";
+            command += task_list_path;
 
-            if (regenerate)
-            {
-                string command { "python3 -m pipeline " };
-                command += task_generator_path;
-                command += " ";
-                command += task_list_path;
+            cerr << "> Updating tasks" << endl;
+            if (options().verbose)
+                cerr << command << endl;
 
-                cerr << "> Task list" << endl;
-                if (options().verbose)
-                    cerr << command << endl;
+            int result = system(command.c_str());
 
-                int result = system(command.c_str());
+            cerr << endl;
 
-                cerr << endl;
-
-                if (result != 0)
-                    throw Error("Generator execution failed.");
-            }
-        }
-
-        if (!file_exists(task_list_path))
-        {
-            ostringstream msg;
-            msg << "Task list does not exist: " + task_list_path + ".";
-            if (!task_generator_path.empty())
-                msg << " No task generator provided.";
-
-            throw Error(msg.str());
+            if (result != 0)
+                throw Error("Generator execution failed.");
         }
 
         Task_Manager task_manager;
+
+        if (!task_list_path.empty())
+        {
+            cerr << "> Loading task list: " << task_list_path << endl;
+
+            if (!file_exists(task_list_path))
+            {
+                ostringstream msg;
+                msg << "Task list does not exist: " + task_list_path + ".";
+                throw Error(msg.str());
+            }
+
+            task_manager.load_file(task_list_path, store);
+
+            cerr << endl;
+        }
+
+        store.write(store_path);
+
         Engine engine;
 
-        bool new_tasks = new_generator || new_task_list;
-
-        task_manager.parse_file(store.task_list_path, new_tasks);
+        cerr << "> Scheduling tasks" << endl;
 
         if (task_names.empty())
         {
@@ -139,6 +126,8 @@ int main(int argc, char * argv[])
             for (auto & name : task_names)
                 task_manager.request(name, &engine);
         }
+
+        cerr << endl;
 
         engine.execute();
     }

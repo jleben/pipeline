@@ -33,6 +33,16 @@ void Store::read(const string & path)
             task_generator_path = j["task-generator"];
         if (!j["task-list"].is_null())
             task_list_path = j["task-list"];
+
+        auto task_data = j["tasks"];
+        if (!task_data.is_null())
+        {
+            for (auto d = task_data.begin(); d != task_data.end(); ++d)
+            {
+                string name = d.key();
+                tasks[name] = d.value();
+            }
+        }
     }
     catch(std::domain_error & e)
     {
@@ -50,6 +60,8 @@ void Store::write(const string & path)
         { "task-generator", task_generator_path },
         { "task-list", task_list_path }
     };
+
+    j["tasks"] = tasks;
 
     file << j.dump(4) << endl;
 }

@@ -16,6 +16,7 @@ using std::unordered_set;
 
 class Engine;
 class Task;
+class Store;
 
 class File
 {
@@ -29,6 +30,7 @@ class Task
 {
 public:
     bool defined = false;
+    bool changed = false;
     string name;
     string command;
     vector<File*> input_files;
@@ -50,7 +52,7 @@ class Task_Manager
     // FIXME: Delete stuff when done using
 
 public:
-    void parse_file(const string & path, bool changed);
+    void load_file(const string & path, Store &);
     void request_all(Engine *);
     void request(const string & name, Engine *);
 
@@ -59,7 +61,6 @@ private:
     Task * task(const string & name);
     Work * add_work(Task*);
 
-    bool d_tasks_changed = false;
     unordered_map<string, File*> d_files;
     unordered_map<string, Task*> d_tasks;
     unordered_map<string, Task_Work*> d_work;

@@ -1,4 +1,5 @@
 #include "tasks.hpp"
+#include "persistence.hpp"
 #include "../error.hpp"
 #include "../util/filesystem.hpp"
 #include "../engine/engine.hpp"
@@ -82,7 +83,7 @@ private:
     unordered_set<Task*> visiting;
 };
 
-void Task_Manager::parse_file(const string & path, bool changed)
+void Task_Manager::load_file(const string & path, Store & store)
 {
     json job_data;
 
@@ -111,6 +112,13 @@ void Task_Manager::parse_file(const string & path, bool changed)
             if (task->defined)
             {
                 throw Error("Parser: Task name used multiple times: " + name);
+            }
+
+            auto old_task_data = store.tasks[name];
+            if (task_data != old_task_data)
+            {
+                task->changed = true;
+                store.tasks[name] = task_data;
             }
 
             task->defined = true;
@@ -178,8 +186,6 @@ void Task_Manager::parse_file(const string & path, bool changed)
             throw Error("Task depends on itself: " + c.task->name);
         }
     }
-
-    d_tasks_changed = changed;
 }
 
 File * Task_Manager::file(const string & path)
@@ -239,7 +245,7 @@ Work * Task_Manager::add_work(Task * task)
     bool needs_work = false;
     vector<Work*> upstream_work;
 
-    if (d_tasks_changed)
+    if (task->changed)
     {
         if (!needs_work && options().verbose)
         {
@@ -247,7 +253,6 @@ Work * Task_Manager::add_work(Task * task)
                  << " scheduled, because of new task definition."
                  << endl;
         }
-        // FIXME: Check that this particular task actually changed.
         needs_work = true;
     }
 

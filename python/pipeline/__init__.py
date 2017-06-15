@@ -45,7 +45,7 @@ class Pipeline:
             path = self.defaultSavePath()
 
         f = open(path, 'w')
-        f.write(json.dumps(self.tasks))
+        f.write(json.dumps(self.tasks, indent=4))
         f.write('\n')
 
     def defaultSavePath(self):

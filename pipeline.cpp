@@ -81,7 +81,7 @@ int main(int argc, char * argv[])
             command += " ";
             command += task_list_path;
 
-            cerr << "> Updating tasks" << endl;
+            cerr << "> Updating tasks: " << task_generator_path << endl;
             if (options().verbose)
                 cerr << command << endl;
 

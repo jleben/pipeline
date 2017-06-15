@@ -1,6 +1,8 @@
 import sys
 from . import Pipeline
 
+sys.dont_write_bytecode = True
+
 if len(sys.argv) > 1:
     root_path = sys.argv[1]
     p = Pipeline()

@@ -1,4 +1,4 @@
-#include "arguments.hpp"
+#include "util/arguments/arguments.hpp"
 #include "pipeline.hpp"
 #include "input/tasks.hpp"
 #include "input/persistence.hpp"
@@ -26,16 +26,16 @@ int main(int argc, char * argv[])
     string task_name_pattern;
     vector<string> task_names;
 
-    Arguments args;
+    Arguments::Parser args;
     args.add_option("-l", task_list_path);
     args.add_option("-g", task_generator_path);
     args.add_option("-matching", task_name_pattern);
     args.add_switch("-v", options().verbose, true);
-    args.save_remaining(task_names);
+    args.remaining_arguments(task_names);
 
     try {
         args.parse(argc, argv);
-    } catch (Arguments::Error & e) {
+    } catch (Arguments::Parser::Error & e) {
         cerr << "Command line error: " << e.what() << endl;
         return 1;
     }

@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <regex>
 
 using namespace std;
 
@@ -237,13 +238,40 @@ void Task_Manager::request(const string & name, Engine * engine)
         throw Error("Task does not exist: " + name);
     }
 
-    Work * work = add_work(task);
+    add_work(task, engine);
+}
 
+void Task_Manager::request_matching(const string & pattern_def, Engine * engine)
+{
+    bool has_match = false;
+
+    regex pattern(pattern_def);
+
+    for (auto entry : d_tasks)
+    {
+        auto & name = entry.first;
+        auto & task = entry.second;
+        if (regex_match(name, pattern))
+        {
+            add_work(task, engine);
+            has_match = true;
+        }
+    }
+
+    if (!has_match)
+    {
+        throw Error("Pattern does not match any task name: " + pattern_def);
+    }
+}
+
+void Task_Manager::add_work(Task * task, Engine * engine)
+{
+    Work * work = get_work(task);
     if (work)
         engine->schedule(work);
 }
 
-Work * Task_Manager::add_work(Task * task)
+Work * Task_Manager::get_work(Task * task)
 {
     if (!task)
         throw Error("Attempt to add work for null task.");
@@ -278,7 +306,7 @@ Work * Task_Manager::add_work(Task * task)
 
     for (Task * upstream : task->upstream_tasks)
     {
-        auto work = add_work(upstream);
+        auto work = get_work(upstream);
         if (work)
         {
             if (!needs_work && options().verbose)
@@ -300,7 +328,7 @@ Work * Task_Manager::add_work(Task * task)
         {
             for (Task * upstream : file->producers)
             {
-                auto work = add_work(upstream);
+                auto work = get_work(upstream);
                 if (work)
                 {
                     if (!needs_work && options().verbose)

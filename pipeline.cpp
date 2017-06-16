@@ -23,11 +23,13 @@ int main(int argc, char * argv[])
 {
     string task_list_path;
     string task_generator_path;
+    string task_name_pattern;
     vector<string> task_names;
 
     Arguments args;
     args.add_option("-l", task_list_path);
     args.add_option("-g", task_generator_path);
+    args.add_option("-matching", task_name_pattern);
     args.add_switch("-v", options().verbose, true);
     args.save_remaining(task_names);
 
@@ -117,7 +119,7 @@ int main(int argc, char * argv[])
 
         cerr << "> Scheduling tasks" << endl;
 
-        if (task_names.empty())
+        if (task_names.empty() && task_name_pattern.empty())
         {
             task_manager.request_all(&engine);
         }
@@ -125,6 +127,9 @@ int main(int argc, char * argv[])
         {
             for (auto & name : task_names)
                 task_manager.request(name, &engine);
+
+            if (!task_name_pattern.empty())
+                task_manager.request_matching(task_name_pattern, &engine);
         }
 
         cerr << endl;

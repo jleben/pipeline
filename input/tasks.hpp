@@ -55,12 +55,14 @@ public:
     void load_file(const string & path, Store &);
     void request_all(Engine *);
     void request(const string & name, Engine *);
+    void request_matching(const string & pattern, Engine *);
 
 private:
     File * file(const string & path);
     Task * task(const string & name);
     Task * existing_task(const string & name);
-    Work * add_work(Task*);
+    Work * get_work(Task*);
+    void add_work(Task*, Engine*);
 
     unordered_map<string, File*> d_files;
     unordered_map<string, Task*> d_tasks;

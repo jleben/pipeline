@@ -79,8 +79,13 @@ void Engine::execute()
 
     d_work.clear();
 
-    for (Work * work : schedule.ordered_work())
+    auto work_list = schedule.ordered_work();
+    int work_count = (int) work_list.size();
+    int work_index = 0;
+    for (Work * work : work_list)
     {
+        ++work_index;
+        cerr << "[" << work_index << "/" << work_count << "]" << endl;
         work->execute();
     }
 }

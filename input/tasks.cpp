@@ -212,6 +212,15 @@ Task * Task_Manager::task(const string & name)
     return task;
 }
 
+Task * Task_Manager::existing_task(const string & name)
+{
+    auto t = d_tasks.find(name);
+    if (t == d_tasks.end())
+        return nullptr;
+    else
+        return t->second;
+}
+
 void Task_Manager::request_all(Engine * engine)
 {
     for (const auto & entry : d_tasks)
@@ -222,7 +231,7 @@ void Task_Manager::request_all(Engine * engine)
 
 void Task_Manager::request(const string & name, Engine * engine)
 {
-    auto task = this->task(name);
+    auto task = this->existing_task(name);
     if (!task)
     {
         throw Error("Task does not exist: " + name);

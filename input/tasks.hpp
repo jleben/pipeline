@@ -59,6 +59,7 @@ public:
 private:
     File * file(const string & path);
     Task * task(const string & name);
+    Task * existing_task(const string & name);
     Work * add_work(Task*);
 
     unordered_map<string, File*> d_files;

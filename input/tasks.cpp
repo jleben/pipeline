@@ -222,15 +222,15 @@ Task * Task_Manager::existing_task(const string & name)
         return t->second;
 }
 
-void Task_Manager::request_all(Engine * engine)
+void Task_Manager::request_all(Engine * engine, bool force)
 {
     for (const auto & entry : d_tasks)
     {
-        request(entry.first, engine);
+        request(entry.first, engine, force);
     }
 }
 
-void Task_Manager::request(const string & name, Engine * engine)
+void Task_Manager::request(const string & name, Engine * engine, bool force)
 {
     auto task = this->existing_task(name);
     if (!task)
@@ -238,10 +238,10 @@ void Task_Manager::request(const string & name, Engine * engine)
         throw Error("Task does not exist: " + name);
     }
 
-    add_work(task, engine);
+    add_work(task, engine, force);
 }
 
-void Task_Manager::request_matching(const string & pattern_def, Engine * engine)
+void Task_Manager::request_matching(const string & pattern_def, Engine * engine, bool force)
 {
     bool has_match = false;
 
@@ -253,7 +253,7 @@ void Task_Manager::request_matching(const string & pattern_def, Engine * engine)
         auto & task = entry.second;
         if (regex_match(name, pattern))
         {
-            add_work(task, engine);
+            add_work(task, engine, force);
             has_match = true;
         }
     }
@@ -264,14 +264,14 @@ void Task_Manager::request_matching(const string & pattern_def, Engine * engine)
     }
 }
 
-void Task_Manager::add_work(Task * task, Engine * engine)
+void Task_Manager::add_work(Task * task, Engine * engine, bool force)
 {
-    Work * work = get_work(task);
+    Work * work = get_work(task, force);
     if (work)
         engine->schedule(work);
 }
 
-Work * Task_Manager::get_work(Task * task)
+Work * Task_Manager::get_work(Task * task, bool force)
 {
     if (!task)
         throw Error("Attempt to add work for null task.");
@@ -281,6 +281,15 @@ Work * Task_Manager::get_work(Task * task)
 
     bool needs_work = false;
     vector<Work*> upstream_work;
+
+    if (force)
+    {
+        if (!needs_work && options().verbose)
+        {
+            cerr << "Task " << task->name << " scheduled explicitly." << endl;
+        }
+        needs_work = true;
+    }
 
     if (task->changed)
     {
@@ -306,7 +315,7 @@ Work * Task_Manager::get_work(Task * task)
 
     for (Task * upstream : task->upstream_tasks)
     {
-        auto work = get_work(upstream);
+        auto work = get_work(upstream, force);
         if (work)
         {
             if (!needs_work && options().verbose)
@@ -328,7 +337,7 @@ Work * Task_Manager::get_work(Task * task)
         {
             for (Task * upstream : file->producers)
             {
-                auto work = get_work(upstream);
+                auto work = get_work(upstream, force);
                 if (work)
                 {
                     if (!needs_work && options().verbose)

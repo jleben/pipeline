@@ -29,6 +29,7 @@ int main(int argc, char * argv[])
     args.add_option("-l", task_list_path);
     args.add_option("-g", task_generator_path);
     args.add_switch("-v", options().verbose, true);
+    args.add_switch("-f", options().force, true);
     args.remaining_arguments(task_names);
 
     try {
@@ -119,12 +120,12 @@ int main(int argc, char * argv[])
 
         if (task_names.empty())
         {
-            task_manager.request_all(&engine);
+            task_manager.request_all(&engine, options().force);
         }
         else
         {
             for (auto & name : task_names)
-                task_manager.request_matching(name, &engine);
+                task_manager.request_matching(name, &engine, options().force);
         }
 
         cerr << endl;

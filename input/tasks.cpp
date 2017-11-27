@@ -189,6 +189,18 @@ void Task_Manager::load_file(const string & path, Store & store)
     }
 }
 
+set<string> Task_Manager::task_names() const
+{
+    set<string> names;
+
+    for (auto & entry : d_tasks)
+    {
+        names.insert(entry.first);
+    }
+
+    return names;
+}
+
 File * Task_Manager::file(const string & path)
 {
     // FIXME: convert path to absolute path

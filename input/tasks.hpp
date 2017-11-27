@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 
 namespace Pipeline {
 
@@ -13,6 +14,7 @@ using std::string;
 using std::vector;
 using std::unordered_map;
 using std::unordered_set;
+using std::set;
 
 class Engine;
 class Task;
@@ -53,6 +55,7 @@ class Task_Manager
 
 public:
     void load_file(const string & path, Store &);
+    set<string> task_names() const;
     void request_all(Engine *, bool force);
     void request(const string & name, Engine *, bool force);
     void request_matching(const string & pattern, Engine *, bool force);

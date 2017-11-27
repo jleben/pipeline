@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <regex>
 
 using namespace Pipeline;
 using namespace std;
@@ -19,17 +20,22 @@ Options & Pipeline::options()
     return options;
 }
 
+void print_available_task_names(const vector<string> & requested_names, Task_Manager & task_manager);
+
 int main(int argc, char * argv[])
 {
     string task_list_path;
     string task_generator_path;
     vector<string> task_names;
 
+    bool list_tasks = false;
+
     Arguments::Parser args;
     args.add_option("-l", task_list_path);
     args.add_option("-g", task_generator_path);
     args.add_switch("-v", options().verbose, true);
     args.add_switch("-f", options().force, true);
+    args.add_switch("--list-tasks", list_tasks, true);
     args.remaining_arguments(task_names);
 
     try {
@@ -114,6 +120,12 @@ int main(int argc, char * argv[])
 
         store.write(store_path);
 
+        if (list_tasks)
+        {
+            print_available_task_names(task_names, task_manager);
+            return 0;
+        }
+
         Engine engine;
 
         cerr << "> Scheduling tasks" << endl;
@@ -136,5 +148,31 @@ int main(int argc, char * argv[])
     {
         cerr << "Error: " << e.what() << endl;
         return 1;
+    }
+}
+
+void print_available_task_names(const vector<string> & requested_names, Task_Manager & task_manager)
+{
+    auto available_names = task_manager.task_names();
+
+    if (requested_names.empty())
+    {
+        for (auto & name : available_names)
+        {
+            cout << name << endl;
+        }
+    }
+    else
+    {
+        for (auto & requested_name : requested_names)
+        {
+            regex pattern(requested_name);
+
+            for (auto & name : available_names)
+            {
+                if (regex_search(name, pattern))
+                    cout << name << endl;
+            }
+        }
     }
 }

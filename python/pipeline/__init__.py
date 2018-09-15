@@ -3,35 +3,36 @@ import json
 import runpy
 import os.path
 import sys
+from pathlib import Path
 
 class Pipeline:
 
     tasks = [];
 
-    def __init__(self, path=None, args=[]):
+    def __init__(self, args=[]):
         self.tasks = [];
-        self.path = path;
+        self.path = None;
         self.args = args;
 
     def add(self, task):
         self.tasks.append(task);
 
     def relativePath(self, path):
-        if self.path:
-            return os.path.join(self.path, path)
+        if self.path is None:
+            return Path(path)
         else:
-            return path
+            return self.path / path
 
-    def load(self, path):
+    def load(self, another_path):
 
-        child_file_path = os.path.abspath(self.relativePath(path))
+        child_file_path = os.path.abspath(self.relativePath(another_path))
         child_dir = os.path.dirname(child_file_path)
         child_name = os.path.splitext(os.path.basename(child_file_path))[0]
 
         old_path = self.path
         old_sys_path = sys.path;
 
-        self.path = child_dir
+        self.path = Path(child_dir)
         if sys.path[0] != child_dir:
             sys.path.insert(0,child_dir)
 

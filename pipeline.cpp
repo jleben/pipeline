@@ -20,23 +20,24 @@ Options & Pipeline::options()
     return options;
 }
 
-void print_available_task_names(const vector<string> & requested_names, Task_Manager & task_manager);
+static void print_task_names(Task_Manager & task_manager);
 
 int main(int argc, char * argv[])
 {
-    string task_list_path;
-    string task_generator_path;
-    vector<string> task_names;
+    string task_generator_path = "tasks.py";
+    const string task_list_path = ".pipeline.json";
+    vector<string> generator_args;
 
+    bool print_help = false;
     bool list_tasks = false;
 
     Arguments::Parser args;
-    args.add_option("-l", task_list_path);
-    args.add_option("-g", task_generator_path);
-    args.add_switch("-v", options().verbose, true);
-    args.add_switch("-f", options().force, true);
-    args.add_switch("--list-tasks", list_tasks, true);
-    args.remaining_arguments(task_names);
+    args.add_option("-g", task_generator_path, "Task definition file. (Default = tasks.py)");
+    args.add_switch("-v", options().verbose, true, "Print verbose information about what's happening.");
+    args.add_switch("-f", options().force, true, "Force execution of all tasks.");
+    args.add_switch("-h", print_help, true, "Print help and do nothing else.");
+    args.add_switch("--list-tasks", list_tasks, true, "List tasks without executing them.");
+    args.remaining_arguments(generator_args);
 
     try {
         args.parse(argc, argv);
@@ -45,10 +46,10 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    if (!task_list_path.empty() && !task_generator_path.empty())
+    if (print_help)
     {
-        cerr << "Options -l and -g can not be used simultaneously." << endl;
-        return 1;
+        args.print(cerr);
+        return 0;
     }
 
     try
@@ -65,28 +66,21 @@ int main(int argc, char * argv[])
         if (!task_generator_path.empty())
         {
             store.task_generator_path = task_generator_path;
-            store.task_list_path.clear();
-        }
-        else if (!task_list_path.empty())
-        {
-            store.task_list_path = task_list_path;
-            store.task_generator_path.clear();
         }
 
-        task_generator_path = store.task_generator_path;
-        task_list_path = store.task_list_path;
-
-        if (!task_generator_path.empty())
+        // Run task generator
         {
             if (!file_exists(task_generator_path))
                 throw Error("Generator does not exist: " + task_generator_path);
-
-            task_list_path = "pipeline.json";
 
             string command { "python3 -m pipeline " };
             command += task_generator_path;
             command += " ";
             command += task_list_path;
+            for (auto & arg : generator_args)
+            {
+                command += " " + arg;
+            }
 
             cerr << "> Updating tasks: " << task_generator_path << endl;
             if (options().verbose)
@@ -102,7 +96,7 @@ int main(int argc, char * argv[])
 
         Task_Manager task_manager;
 
-        if (!task_list_path.empty())
+        // Load task list
         {
             cerr << "> Loading task list: " << task_list_path << endl;
 
@@ -122,7 +116,7 @@ int main(int argc, char * argv[])
 
         if (list_tasks)
         {
-            print_available_task_names(task_names, task_manager);
+            print_task_names(task_manager);
             return 0;
         }
 
@@ -130,15 +124,7 @@ int main(int argc, char * argv[])
 
         cerr << "> Scheduling tasks" << endl;
 
-        if (task_names.empty())
-        {
-            task_manager.request_all(&engine, options().force);
-        }
-        else
-        {
-            for (auto & name : task_names)
-                task_manager.request_matching(name, &engine, options().force);
-        }
+        task_manager.request_all(&engine, options().force);
 
         cerr << endl;
 
@@ -151,28 +137,13 @@ int main(int argc, char * argv[])
     }
 }
 
-void print_available_task_names(const vector<string> & requested_names, Task_Manager & task_manager)
+static
+void print_task_names(Task_Manager & task_manager)
 {
     auto available_names = task_manager.task_names();
 
-    if (requested_names.empty())
+    for (auto & name : available_names)
     {
-        for (auto & name : available_names)
-        {
-            cout << name << endl;
-        }
-    }
-    else
-    {
-        for (auto & requested_name : requested_names)
-        {
-            regex pattern(requested_name);
-
-            for (auto & name : available_names)
-            {
-                if (regex_search(name, pattern))
-                    cout << name << endl;
-            }
-        }
+        cout << name << endl;
     }
 }

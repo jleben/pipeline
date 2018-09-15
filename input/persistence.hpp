@@ -15,7 +15,6 @@ class Store
 {
 public:
     string task_generator_path;
-    string task_list_path;
     unordered_map<string,json> tasks;
 
     void read(const string & path);

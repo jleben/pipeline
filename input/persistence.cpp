@@ -31,8 +31,6 @@ void Store::read(const string & path)
     {
         if (!j["task-generator"].is_null())
             task_generator_path = j["task-generator"];
-        if (!j["task-list"].is_null())
-            task_list_path = j["task-list"];
 
         auto task_data = j["tasks"];
         if (!task_data.is_null())
@@ -57,8 +55,7 @@ void Store::write(const string & path)
         throw Error("Can not open store: " + path);
 
     json j = {
-        { "task-generator", task_generator_path },
-        { "task-list", task_list_path }
+        { "task-generator", task_generator_path }
     };
 
     j["tasks"] = tasks;

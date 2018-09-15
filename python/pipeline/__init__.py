@@ -8,9 +8,10 @@ class Pipeline:
 
     tasks = [];
 
-    def __init__(self, path=None):
+    def __init__(self, path=None, args=[]):
         self.tasks = [];
         self.path = path;
+        self.args = args;
 
     def add(self, task):
         self.tasks.append(task);

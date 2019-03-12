@@ -11,7 +11,7 @@ class Pipeline:
         self._tasks = [];
         self._root_path = Path(root_path);
         self._path = self._root_path;
-        self._args = args;
+        self.args = args;
 
     def add(self, task):
         self._tasks.append(task);
